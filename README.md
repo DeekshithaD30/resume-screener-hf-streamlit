@@ -1,4 +1,8 @@
 # 🤖 Resume Screener — Hugging Face + Streamlit
+## 🔗 Live Demo
+
+👉 [Try the app here](https://resume-screener-hf-app-krxkkescm9mlqga2n7jxna.streamlit.app)
+
 
 An AI-powered resume screening web app built using Hugging Face Transformers and Streamlit. Compares a resume to a job description using cosine similarity, and gives AI-generated feedback — fully local, no OpenAI key required.
 
