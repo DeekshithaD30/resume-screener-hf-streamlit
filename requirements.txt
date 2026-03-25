@@ -1,6 +1,2 @@
 streamlit
-transformers==4.36.2
-torch>=2.0.0
-sentencepiece
 scikit-learn
-accelerate

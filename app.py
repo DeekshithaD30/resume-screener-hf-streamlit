@@ -1,5 +1,4 @@
 import streamlit as st
-from transformers import pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -9,25 +8,15 @@ st.title("🤖 AI Resume Screener")
 
 with st.expander("📄 About this App", expanded=True):
     st.write(
-        "This tool compares a resume with a job description using skill matching, "
-        "text similarity, and AI-generated feedback."
+        "This tool compares a resume with a job description using skill matching "
+        "and text similarity, and provides actionable feedback."
     )
 
 # ---------- INPUT ----------
 resume_input = st.text_area("✍️ Paste Your Resume", height=250)
 jd_input = st.text_area("🧾 Paste Job Description", height=250)
 
-# ---------- LOAD MODEL SAFELY ----------
-@st.cache_resource
-def load_model():
-    return pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
-
-try:
-    summarizer = load_model()
-except:
-    summarizer = None
-
-# ---------- SKILL LIST ----------
+# ---------- SKILLS ----------
 SKILLS = [
     "python", "sql", "tableau", "power bi", "excel",
     "machine learning", "pandas", "numpy", "matplotlib"
@@ -50,7 +39,7 @@ def skill_match(jd, resume):
     score = (len(matched) / len(jd_skills)) * 100
     return round(score, 2), list(matched), list(missing)
 
-# ---------- MAIN ACTION ----------
+# ---------- MAIN ----------
 if st.button("🔍 Analyze Match"):
     if not resume_input or not jd_input:
         st.warning("Please provide both resume and job description.")
@@ -66,8 +55,8 @@ if st.button("🔍 Analyze Match"):
         st.markdown(f"### ✅ Text Similarity (TF-IDF): `{round(similarity * 100, 2)}%`")
         st.markdown(f"### 🎯 Skill Match Score: `{score}%`")
 
-        st.markdown("**Matched Skills:** " + ", ".join(matched) if matched else "None")
-        st.markdown("**Missing Skills:** " + ", ".join(missing) if missing else "None")
+        st.markdown("**Matched Skills:** " + (", ".join(matched) if matched else "None"))
+        st.markdown("**Missing Skills:** " + (", ".join(missing) if missing else "None"))
 
         # ---------- RECOMMENDATION ----------
         if score > 75:
@@ -79,31 +68,23 @@ if st.button("🔍 Analyze Match"):
 
         st.markdown(f"**Recommendation:** {rec}")
 
-        # ---------- AI FEEDBACK ----------
-        with st.spinner("Generating AI feedback..."):
-            if summarizer:
-                try:
-                    prompt = f"""
-                    Compare the following resume with the job description.
+        # ---------- LIGHTWEIGHT FEEDBACK ----------
+        st.markdown("### 🧠 AI Feedback:")
 
-                    Provide:
-                    - Key strengths
-                    - Missing skills
-                    - Suggestions for improvement
+        feedback = []
 
-                    Resume:
-                    {resume_input[:800]}
+        if score > 75:
+            feedback.append("Strong match for the role.")
+        elif score > 50:
+            feedback.append("Moderate match. Improvement needed.")
+        else:
+            feedback.append("Low match. Significant skill gaps.")
 
-                    Job Description:
-                    {jd_input[:800]}
-                    """
+        if missing:
+            feedback.append("Focus on improving: " + ", ".join(missing))
 
-                    summary = summarizer(prompt, max_length=100, min_length=30, do_sample=False)
+        if matched:
+            feedback.append("Strengths: " + ", ".join(matched))
 
-                    st.markdown("### 🧠 AI Feedback Summary:")
-                    st.success(summary[0]['summary_text'])
-
-                except Exception as e:
-                    st.error(f"AI feedback failed: {e}")
-            else:
-                st.warning("AI feedback unavailable (model failed to load)")
+        for f in feedback:
+            st.write("- " + f)
